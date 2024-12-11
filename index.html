@@ -1,0 +1,185 @@
+<!DOCTYPE html><html><head><title>glide</title><meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui=1"><meta charset="UTF-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="description" content=""><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="icon64.png"><link rel="apple-touch-icon" sizes="180x180" href="icon180.png"><link rel="icon" type="image/png" sizes="32x32" href="icon32.png"><link rel="icon" type="image/png" sizes="16x16" href="icon16.png"><style>html,body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  overflow:hidden;
+  font-family: Verdana;
+}
+.noselect {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+#canvaswrapper {
+  text-align: center ;
+}
+</style><style>@font-face { font-family: "BitCell" ; src: url("fonts/BitCell.ttf") format("truetype"); }</style><script>window.fonts = ["BitCell"]</script></head><body class="noselect custom-cursor" oncontextmenu="return false;"><div id="canvaswrapper"></div><script type="text/javascript">var resources = {"images":[{"file":"bird.png","version":139,"size":344,"properties":{"frames":1,"fps":5}},{"file":"bug.png","version":26,"size":192,"properties":{"frames":1,"fps":5}},{"file":"icon.png","version":29,"size":904,"properties":{"frames":1,"fps":5}},{"file":"leaf.png","version":45,"size":277,"properties":{"frames":1,"fps":5}}],"assets":[],"maps":{},"sounds":[],"music":[]};
+var graphics = "M1";
+
+</script><script type="text/javascript">var orientation = 'any' ;
+var aspect = 'free' ;
+var ms_libs = [] ;
+window.skip_service_worker = true;
+window.exported_project = true;
+window.ms_use_server = false ;
+</script><script src="compiler.js"></script><script src="parser.js"></script><script src="processor.js"></script><script src="program.js"></script><script src="routine.js"></script><script src="runner.js"></script><script src="token.js"></script><script src="tokenizer.js"></script><script src="transpiler.js"></script><script src="microengine.js"></script></body><script type="text/javascript">//
+//
+// The game is started with the code below.
+// Once you have received the "started" signal (see below),
+// you can do the following:
+// 1) Inject functions or objects into the global context of the microStudio engine, example:
+//
+//   window.player.setGlobal("special_callback",function(x) { console.info(x) }) ;
+//   // Your microScript code can now call the "special_callback" function
+//
+// 2) Call microScript global functions from your JavaScript code, example:
+//
+//   window.player.call("call_me_from_javascript",[10,1000]) ;
+//   // arguments to the function call are provided as an array
+//
+// 3) Run a microScript code snippet from your JavaScript code, example:
+//
+//   window.player.exec("player.position_x = 50",function(result) { console.log(result) ; }) ;
+//
+
+window.addEventListener("load",function() {
+  window.player = new Player(function(event) {
+    if (event.name == "started") {
+      // signal that the game is started
+    }
+    else if (event.name == "log") {
+      // console.info(event.data) ;
+    }
+  }) ;
+  document.body.focus() ;
+}) ;
+
+</script><script id="code" type="text/x-microscript">
+
+
+function()
+init = function()
+  
+  //Bird
+  bird = object
+    y = 0
+    rotation = 0
+    speed = 2
+    rotation_speed = .75
+    position = 0
+  end
+  
+  //Leaves
+  leaves_x = [200,300,400]
+  leaves_y = [-50,0,50]
+  leaves_r = [45,-45,172]
+  
+  //bug
+  bug_x = 500
+  bug_y = 25
+  
+  //startup
+  bird.position=0
+  bird.y=0
+  gameover=0
+  running=0
+  score=0
+  
+end
+
+update = function()
+  
+  //gameover function
+  if gameover>0 then
+    gameover = gameover+1
+    if gameover>150 then init() end
+  elsif running then
+    
+    bird.position = bird.position+bird.speed
+    bird.speed = bird.speed+0.001
+  
+    //Bird movement
+    if keyboard.RIGHT and bird.rotation>-45 then
+      bird.rotation -= bird.rotation_speed
+    end
+    if keyboard.LEFT and bird.rotation<45 then
+      bird.rotation += bird.rotation_speed
+    end
+    if bird.y+bird.rotation/3 < 90 and bird.y+bird.rotation/3 > -90 then
+      bird.y = bird.y+bird.rotation/3
+    end
+    
+    //bug
+    if bug_x<bird.position-120 then
+      bug_x = bird.position+280+random.next()^200
+      bug_y = random.nextInt(200)-100
+    end
+    
+    if abs(bird.position-bug_x)<10 then
+      if bug_y-10<bird.y and bug_y+10>bird.y then
+        score = score+1
+        bug_x = bird.position+280+random.next()^200
+        bug_y = random.nextInt(200)-100
+      end
+    end
+  
+    //Leaves
+    for i=0 to leaves_x.length-1
+      
+      if leaves_x[i]<bird.position-120 then
+         leaves_x[i] = bird.position+280+random.next()*200
+         leaves_y[i] = random.nextInt(200)-100
+      end
+    
+     //Leaf collision
+     if abs(bird.position-leaves_x[i])<10 then
+        if leaves_y[i]-10<bird.y and leaves_y[i]+10>bird.y then
+          gameover=1
+        end
+     end
+     
+    end
+    
+  else
+    if touch.touching then running=1 
+  end
+  
+end
+end
+
+draw = function()
+  screen.fillRect(0,0,screen.width,screen.height,"rgb(113,161,255)")
+  
+  //bird
+  screen.setDrawRotation(bird.rotation)
+  screen.drawSprite("bird",-100,bird.y,40,40)
+  screen.setDrawRotation(0)
+  
+  //bug
+  screen.drawSprite("bug",bug_x-bird.position-80+random.next(),bug_y+random.next(),20,20)
+  
+  //leaves
+  for i=0 to leaves_x.length-1
+    screen.setDrawRotation(leaves_r[i])
+    screen.drawSprite("leaf",leaves_x[i]-bird.position-80,leaves_y[i],40,40)
+    screen.setDrawRotation(0)
+  end
+  
+  //score
+  screen.drawSprite("bug",100,80,20,20)
+  screen.drawText(score,120,80,20,"#FFF")
+  screen.drawText(round(bird.position/120),-120, 80,20,"#FFF")
+  
+  if running==0 then
+    screen.drawText("Click anywhere to start!",0,0,30)
+  end
+  
+end
+
+end()
+
+
+</script></html>
